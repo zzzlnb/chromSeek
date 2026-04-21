@@ -4,8 +4,8 @@ import torch.nn.functional as F
 import math
 import sys
 from typing import List
-sys.path.append('/mnt/nfs/jyzhu/proj/ChromSeek/DNA_ChromSeek/ChromSeekFinal')
 from cc6_200bp import ConvBlock, ResidualBlock, PositionalEncoding
+import os
 class MultiOmicsModel_2Mb(nn.Module):
     """
     Designed for 2,240,000 bp input and 2kb (2000 bp) output resolution.
@@ -84,7 +84,8 @@ class MultiOmicsModel_2Mb(nn.Module):
         out = self.final_head(x)                        
         return out
 if __name__ == "__main__":
-    model = MultiOmicsModel_2Mb(num_tasks=4, pretrained_path='/mnt/nfs/jyzhu/proj/ChromSeek/DNA_ChromSeek/ChromSeekFinal/best_model_448k_200bp.pth')
+    pretrained_path_default = os.path.join(os.path.dirname(__file__), 'best_model_448k_200bp.pth')
+    model = MultiOmicsModel_2Mb(num_tasks=4, pretrained_path=pretrained_path_default)
     dummy = torch.randn(2, 4, 2240000)
     out = model(dummy)
     print("Output shape:", out.shape)

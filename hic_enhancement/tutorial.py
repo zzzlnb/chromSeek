@@ -6,7 +6,7 @@ from skimage.metrics import structural_similarity as ssim
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from model import DNAToHic_BridgeModel
+from model import StrongFusionModel_V4
 def compute_metrics(pred, gt):
     """Compute SSIM and Pearson Correlation Coefficient."""
     pcc, _ = pearsonr(pred.flatten(), gt.flatten())
@@ -26,23 +26,32 @@ def main():
     t_seq = sample['inputs']['seq'].to(device)                             
     if t_seq.dim() == 2:
         t_seq = t_seq.unsqueeze(0)
-    t_hic = sample['inputs']['hic'].to(device)                                    
+    t_hic_raw = sample['inputs']['hic'].to(device)
+    raw_hic = t_hic_raw.squeeze().cpu().numpy()
+    
+    t_hic = torch.log1p(t_hic_raw)
+    max_val = t_hic.max()
+    if max_val > 0:
+        t_hic = t_hic / max_val
+        
     if t_hic.dim() == 3:
         t_hic = t_hic.unsqueeze(0)
-    gt_hic = sample['targets']['enhanced_hic'].squeeze().cpu().numpy()
-    raw_hic = t_hic.squeeze().cpu().numpy()
+        
+    gt_hic_raw = sample['targets']['hic'].squeeze().cpu().numpy()
+    gt_hic = np.log1p(gt_hic_raw)
+    
     print(f"  --> DNA Sequence Shape  : {t_seq.shape}")
     print(f"  --> Sparse Hi-C Shape   : {t_hic.shape}")
     print(f"  --> Target Hi-C Shape   : {gt_hic.shape}\n")
     print(f"[Step 2] Initializing model and loading weights from {ckpt_path}...")
-    model = DNAToHic_BridgeModel().to(device)
+    model = StrongFusionModel_V4().to(device)
     state_dict = torch.load(ckpt_path, map_location=device, weights_only=True)
     model.load_state_dict(state_dict)
     model.eval()
     print("[Step 3] Running Forward Pass (Inference)...")
     with torch.no_grad():
         with torch.amp.autocast('cuda'):
-            out = model(t_seq, t_hic)
+            _, out = model(t_seq, t_hic)
         pred_hic = out.squeeze().cpu().numpy()
         pred_hic = np.clip(pred_hic, 0, None)                         
     print("[Step 4] Computing Metrics...")
@@ -50,13 +59,13 @@ def main():
     print(f"  --> Pearson Correlation (PCC)     : {pcc:.4f}")
     print(f"  --> Structural Similarity (SSIM)  : {ssim_val:.4f}\n")
     print("[Step 5] Generating Visualizations...")
-    def process_for_vis(mat):
-        log_mat = np.log1p(mat)
+    def process_for_vis(mat, is_logged=False):
+        log_mat = np.log1p(mat) if not is_logged else mat.copy()
         p80 = np.percentile(log_mat[log_mat > 0], 80) if np.sum(log_mat > 0) > 0 else 1.0
         return log_mat, p80
-    vis_raw, p80_raw = process_for_vis(raw_hic)
-    vis_pred, p80_pred = process_for_vis(pred_hic)
-    vis_gt, p80_gt = process_for_vis(gt_hic)
+    vis_raw, p80_raw = process_for_vis(raw_hic, is_logged=False)
+    vis_pred, p80_pred = process_for_vis(pred_hic, is_logged=True)
+    vis_gt, p80_gt = process_for_vis(gt_hic, is_logged=True)
     fig, axes = plt.subplots(1, 3, figsize=(18, 6))
     axes[0].imshow(vis_raw, cmap='Reds', vmin=0, vmax=p80_raw)
     axes[0].set_title("Input Sparse Hi-C", fontsize=14)

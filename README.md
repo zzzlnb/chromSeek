@@ -28,3 +28,12 @@ python hic_enhancement/tutorial.py
 - **Loop 预测 (Loop Prediction)**: `loop_prediction/tutorial.py`
 - **ChIA-PET 预测 (ChIA-PET Prediction)**: `chiapet_prediction/tutorial.py`
 - **多组学预测 (Multi-omics Prediction)**: `multiomics_prediction/tutorial.py`
+
+### 3. 交互式单细胞分析工作流 (Interactive Jupyter App) 🌟
+项目特别提供了一个用户友好的端到端 Jupyter Notebook 工具，适用于**单细胞级别 Micro-C / Hi-C 的分辨率极大化增强及 TAD 结构域预测**。在这个交互应用中，您可以：
+- 随时指定 `mcool` 稀疏单细胞矩阵或截取好的 `numpy` 片段阵列。
+- 支持自由设定需要预测的染色体（例如 `chr1`）和起始区域坐标（以 `10kb` 表示的相对 Bin ID）。
+- 自动提取本地存储的序列特征予以对齐计算（包含支持人类全基因组 `hg38` 高速缓存）。
+- 一键调用深度框架自动完成图像级重构，并在此基础上利用动态百分位自适应机制（95th percentile）精准定位高置信度 TAD，进行可视化高亮对比！
+
+**快速上手入口**：使用 VS Code 或者官方 Jupyter 服务打开根目录下的 `chromSeek_enhancement_app.ipynb` 依次运行计算块即可。

@@ -40,8 +40,8 @@ def downsampling_deephic(matrix, down_ratio):
     sample_tag = tag_mat[sample_idx]
     down_mat = tag2dense(sample_tag, matrix.shape[0])
     return down_mat
-sys.path.append("/mnt/nfs/jyzhu/proj/ChromSeek/DNA_ChromSeek/ChromSeekFinal")
-from DNA_loader import build_one_hot_table, get_encoded_segment, load_chr                
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
+from DNA_loader import build_one_hot_table, get_encoded_segment, load_chr
 from utils import (
     BIN_SIZE,
     DNA_BP_WINDOW,
